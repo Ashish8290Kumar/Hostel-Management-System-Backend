@@ -2,10 +2,10 @@ package com.AshishWork.HostelManagementSystem.Service;
 
 import com.AshishWork.HostelManagementSystem.Dto.LoginRequest;
 import com.AshishWork.HostelManagementSystem.Dto.RegisterRequest;
+import com.AshishWork.HostelManagementSystem.Dto.AuthResponse;
 
 public interface AuthService {
-    String register(RegisterRequest request);
+    AuthResponse register(RegisterRequest request);
     String login(LoginRequest request);
-    String registerAdminFromBackend(com.AshishWork.HostelManagementSystem.Dto.RegisterRequest request);
-
+    AuthResponse registerAdminFromBackend(RegisterRequest request);
 }
