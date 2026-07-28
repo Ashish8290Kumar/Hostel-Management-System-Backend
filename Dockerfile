@@ -6,7 +6,8 @@ COPY . .
 RUN mvn clean package -DskipTests
 
 # Step 2: Run the application
-FROM eclipse-temurin:17-jdk-alpine
+# Badlaav: Is line mein 17 ko mita kar 21 kar diya hai
+FROM eclipse-temurin:21-jdk-alpine
 WORKDIR /app
 COPY --from=build /app/target/*.jar app.jar
 EXPOSE 8090
