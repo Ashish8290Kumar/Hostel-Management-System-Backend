@@ -12,49 +12,47 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-
 @RestController
 @RequestMapping("/api/v1/documents")
-@CrossOrigin(origins = "http://localhost:5173", allowedHeaders = "*", exposedHeaders = "Authorization", allowCredentials = "true")
-
 public class HostelDocumentController {
-        @Autowired
-        private HostelDocumentService documentService;
 
-        @PostMapping("/upload")
-        public ResponseEntity<Map<String, Object>> uploadFile(
-                @RequestParam("file") MultipartFile file,
-                @RequestParam("module") String module,
-                @RequestParam("username") String username) {
+    @Autowired
+    private HostelDocumentService documentService;
 
-            Map<String, Object> response = new HashMap<>();
+    @PostMapping("/upload")
+    public ResponseEntity<Map<String, Object>> uploadFile(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam("module") String module,
+            @RequestParam("username") String username) {
 
-            if (file.isEmpty()) {
-                response.put("success", false);
-                response.put("message", "It is necessary to select a file.");
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-            }
+        Map<String, Object> response = new HashMap<>();
 
-            try {
-                HostelDocument savedDoc = documentService.saveDocument(file, module, username);
-
-                response.put("success", true);
-                response.put("message", "The document has been successfully synced to the database and storage!");
-                response.put("documentId", savedDoc.getId());
-                response.put("fileName", savedDoc.getFileName());
-                return ResponseEntity.ok(response);
-
-            } catch (Exception e) {
-                response.put("success", false);
-                response.put("message", "Real-world storage processing failed: " + e.getMessage());
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
-            }
+        if (file.isEmpty()) {
+            response.put("success", false);
+            response.put("message", "It is necessary to select a file.");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
 
-        @GetMapping("/user/{username}")
-        public ResponseEntity<List<HostelDocument>> getUserDocuments(@PathVariable String username) {
-            return ResponseEntity.ok(documentService.getDocumentsByUser(username));
+        try {
+            HostelDocument savedDoc = documentService.saveDocument(file, module, username);
+
+            response.put("success", true);
+            response.put("message", "The document has been successfully synced to the database and storage!");
+            response.put("documentId", savedDoc.getId());
+            response.put("fileName", savedDoc.getFileName());
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", "Real-world storage processing failed: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
+    }
+
+    @GetMapping("/user/{username}")
+    public ResponseEntity<List<HostelDocument>> getUserDocuments(@PathVariable String username) {
+        return ResponseEntity.ok(documentService.getDocumentsByUser(username));
+    }
 
     @GetMapping("/check/{username}")
     public ResponseEntity<Map<String, Object>> checkDocumentStatus(@PathVariable String username) {
@@ -73,7 +71,6 @@ public class HostelDocumentController {
     @GetMapping("/view/{username}")
     public ResponseEntity<org.springframework.core.io.Resource> viewDocumentFile(@PathVariable String username) {
         try {
-
             List<HostelDocument> docs = documentService.getDocumentsByUser(username);
             if (docs == null || docs.isEmpty()) {
                 return ResponseEntity.notFound().build();
@@ -86,15 +83,12 @@ public class HostelDocumentController {
                 return ResponseEntity.notFound().build();
             }
 
-
             org.springframework.core.io.Resource resource = new org.springframework.core.io.UrlResource(file.toURI());
-
 
             String contentType = doc.getFileType();
             if (contentType == null) {
                 contentType = "application/octet-stream";
             }
-
 
             return ResponseEntity.ok()
                     .contentType(org.springframework.http.MediaType.parseMediaType(contentType))
@@ -109,7 +103,6 @@ public class HostelDocumentController {
     @GetMapping("/view-by-id/{id}")
     public ResponseEntity<org.springframework.core.io.Resource> viewDocumentById(@PathVariable Long id) {
         try {
-
             HostelDocument doc = documentService.getDocumentById(id);
 
             java.io.File file = new java.io.File(doc.getFilePath());
@@ -124,12 +117,10 @@ public class HostelDocumentController {
         }
     }
 
-
     @DeleteMapping("/{id}")
     public ResponseEntity<Map<String, Object>> deleteDocument(@PathVariable Long id) {
         Map<String, Object> response = new HashMap<>();
         try {
-
             documentService.deleteDocumentById(id);
 
             response.put("success", true);
@@ -141,9 +132,4 @@ public class HostelDocumentController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
-
-
-
 }
-
-
