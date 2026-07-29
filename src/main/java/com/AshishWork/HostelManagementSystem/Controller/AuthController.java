@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/auth")
+@CrossOrigin(origins = "*")
 public class AuthController {
 
     @Autowired private AuthService authService;
@@ -22,32 +23,49 @@ public class AuthController {
     @Autowired private UserDetailsService userDetailsService;
     @Autowired private JwtUtils jwtUtils;
 
-
     @PostMapping("/register")
-    public ResponseEntity<AuthResponse> register(@RequestBody RegisterRequest request) {
-        AuthResponse response = authService.register(request);
-        return ResponseEntity.ok(response);
+    public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
+        try {
+
+            if (request.getRole() != null && "ADMIN".equalsIgnoreCase(request.getRole().toString())) {
+                AuthResponse response = authService.registerAdminFromBackend(request);
+                return ResponseEntity.ok(response);
+            }
+            AuthResponse response = authService.register(request);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
     @PostMapping("/login")
-    public ResponseEntity<AuthResponse> login(@RequestBody LoginRequest request) {
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
-        );
+    public ResponseEntity<?> login(@RequestBody LoginRequest request) {
+        try {
+            authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
+            );
 
-        final UserDetails userDetails = userDetailsService.loadUserByUsername(request.getUsername());
-        final String jwtToken = jwtUtils.generateToken(userDetails);
+            final UserDetails userDetails = userDetailsService.loadUserByUsername(request.getUsername());
+            final String jwtToken = jwtUtils.generateToken(userDetails);
 
-        String assignedRole = userDetails.getAuthorities().stream()
-                .map(granted -> granted.getAuthority())
-                .findFirst().orElse("");
+            String assignedRole = userDetails.getAuthorities().stream()
+                    .map(granted -> granted.getAuthority())
+                    .findFirst().orElse("");
 
-        return ResponseEntity.ok(new AuthResponse(jwtToken, userDetails.getUsername(), assignedRole));
+            return ResponseEntity.ok(new AuthResponse(jwtToken, userDetails.getUsername(), assignedRole));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Invalid credentials: " + e.getMessage());
+        }
     }
 
     @PostMapping("/register-secure-admin-matrix")
-    public ResponseEntity<AuthResponse> registerAdminMatrix(@RequestBody RegisterRequest request) {
-        AuthResponse response = authService.registerAdminFromBackend(request);
-        return ResponseEntity.ok(response);
+    public ResponseEntity<?> registerAdminMatrix(@RequestBody RegisterRequest request) {
+        try {
+            AuthResponse response = authService.registerAdminFromBackend(request);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 }
